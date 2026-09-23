@@ -1,0 +1,13 @@
+build/
+install/
+log/
+.vscode/
+.idea/
+*.code-workspace
+__pycache__/
+*.pyc
+*.db3
+*.mcap
+rosbag2_*/
+frames_*.pdf
+frames_*.gv
