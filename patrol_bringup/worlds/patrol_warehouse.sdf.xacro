@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<sdf version="1.9" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:arg name="headless" default="true"/>
+
+  <!-- Static box obstacle (walls, racks, pallets, pillars). Base sits on the floor. -->
+  <xacro:macro name="static_box" params="name x y sx sy sz r g b yaw:=0.0">
+    <model name="${name}">
+      <static>true</static>
+      <pose>${x} ${y} ${sz / 2.0} 0 0 ${yaw}</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box><size>${sx} ${sy} ${sz}</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>${sx} ${sy} ${sz}</size></box>
+          </geometry>
+          <material>
+            <ambient>${r} ${g} ${b} 1</ambient>
+            <diffuse>${r} ${g} ${b} 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+  </xacro:macro>
+
+  <world name="patrol_warehouse">
+
+    <physics name="3ms" type="ignored">
+      <max_step_size>0.003</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <xacro:unless value="$(arg headless)">
+      <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    </xacro:unless>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
+
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.8 0.85 0.9 1</background>
+      <grid>false</grid>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.4 0.2 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>60 60</size></plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>60 60</size></plane>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.55 0.55 0.55 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Perimeter walls: 20 m x 12 m (x: -4..16, y: -6..6) -->
+    <xacro:static_box name="wall_north" x="6.0"  y="6.0"  sx="20.2" sy="0.2"  sz="2.5" r="0.85" g="0.85" b="0.82"/>
+    <xacro:static_box name="wall_south" x="6.0"  y="-6.0" sx="20.2" sy="0.2"  sz="2.5" r="0.85" g="0.85" b="0.82"/>
+    <xacro:static_box name="wall_west"  x="-4.0" y="0.0"  sx="0.2"  sy="12.2" sz="2.5" r="0.85" g="0.85" b="0.82"/>
+    <xacro:static_box name="wall_east"  x="16.0" y="0.0"  sx="0.2"  sy="12.2" sz="2.5" r="0.85" g="0.85" b="0.82"/>
+
+    <!-- Storage racks (different lengths on purpose to break symmetry) -->
+    <xacro:static_box name="rack_a" x="6.0" y="3.0"  sx="6.0" sy="1.0" sz="2.0" r="0.15" g="0.35" b="0.75"/>
+    <xacro:static_box name="rack_b" x="5.5" y="0.0"  sx="4.0" sy="1.0" sz="2.0" r="0.15" g="0.35" b="0.75"/>
+    <xacro:static_box name="rack_c" x="7.0" y="-3.0" sx="6.0" sy="1.0" sz="2.0" r="0.15" g="0.35" b="0.75"/>
+
+    <!-- Structural pillars -->
+    <xacro:static_box name="pillar_nw" x="1.0"  y="4.5"  sx="0.4" sy="0.4" sz="2.5" r="0.95" g="0.75" b="0.1"/>
+    <xacro:static_box name="pillar_sw" x="1.0"  y="-4.5" sx="0.4" sy="0.4" sz="2.5" r="0.95" g="0.75" b="0.1"/>
+    <xacro:static_box name="pillar_ne" x="11.5" y="1.5"  sx="0.4" sy="0.4" sz="2.5" r="0.95" g="0.75" b="0.1"/>
+    <xacro:static_box name="pillar_se" x="11.5" y="-1.5" sx="0.4" sy="0.4" sz="2.5" r="0.95" g="0.75" b="0.1"/>
+
+    <!-- Office block (north-west corner) -->
+    <xacro:static_box name="office" x="-2.0" y="4.5" sx="3.0" sy="2.5" sz="2.5" r="0.6" g="0.6" b="0.65"/>
+
+    <!-- Loading dock area: pallet stacks (east side) -->
+    <xacro:static_box name="pallet_1" x="14.1" y="3.8"  sx="1.2" sy="1.0" sz="1.1" r="0.55" g="0.4" b="0.25"/>
+    <xacro:static_box name="pallet_2" x="15.3" y="3.8"  sx="1.2" sy="1.0" sz="1.1" r="0.55" g="0.4" b="0.25"/>
+    <xacro:static_box name="pallet_3" x="13.8" y="-3.5" sx="1.2" sy="1.0" sz="1.1" r="0.55" g="0.4" b="0.25" yaw="0.3"/>
+    <xacro:static_box name="pallet_4" x="12.8" y="-5.4" sx="1.2" sy="1.0" sz="1.1" r="0.55" g="0.4" b="0.25"/>
+
+    <!-- Charging station marker (visual only, no collision) -->
+    <model name="charging_station">
+      <static>true</static>
+      <pose>-3.5 0.0 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="plate">
+          <geometry>
+            <box><size>0.6 0.8 0.02</size></box>
+          </geometry>
+          <material>
+            <ambient>0.1 0.8 0.2 1</ambient>
+            <diffuse>0.1 0.8 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
