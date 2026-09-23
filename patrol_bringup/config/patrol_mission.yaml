@@ -1,0 +1,30 @@
+patrol_manager:
+  ros__parameters:
+    autostart: true
+    loop_patrol: true
+    max_loops: 0            # 0 = patrol forever
+    max_retries: 2          # Attempts per waypoint before skipping it
+    retry_delay: 3.0        # [s]
+    goal_frame: map
+
+    # Patrol route, visited in this order. Each waypoint is [x, y, yaw] in the map frame.
+    # Use decimals everywhere (2.0, not 2): mixed int/float arrays are rejected by ROS 2.
+    waypoint_names: [north_west, north_east, loading_dock, south_east, south_west, central_aisle]
+    waypoints:
+      north_west:    [2.5, 4.7, 0.0]
+      north_east:    [10.5, 4.7, 0.0]
+      loading_dock:  [13.0, 0.5, -1.5708]
+      south_east:    [11.0, -4.5, 3.1416]
+      south_west:    [2.5, -4.7, 3.1416]
+      central_aisle: [6.0, 1.5, 0.0]
+
+    # Charging station approach pose (facing the green plate)
+    dock_pose: [-2.8, 0.0, 3.1416]
+
+    battery:
+      initial_level: 100.0
+      drain_rate_moving: 1.0   # [%/s] fast on purpose so the docking cycle shows up in a demo
+      drain_rate_idle: 0.05    # [%/s]
+      charge_rate: 10.0        # [%/s]
+      low_threshold: 30.0      # [%]
+      resume_threshold: 95.0   # [%]
