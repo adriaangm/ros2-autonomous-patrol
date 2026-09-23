@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build & test (ROS 2 Jazzy)
+    runs-on: ubuntu-24.04
+    container:
+      image: ros:jazzy
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: src/ros2-autonomous-patrol
+
+      - name: Install build and test dependencies
+        run: |
+          apt-get update
+          rosdep update --rosdistro jazzy
+          rosdep install --from-paths src --ignore-src -r -y --rosdistro jazzy \
+            -t build -t buildtool -t build_export -t buildtool_export -t test
+
+      - name: Build
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build \
+            --cmake-args -DCMAKE_BUILD_TYPE=Release \
+            --event-handlers console_cohesion+
+
+      - name: Test
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon test --packages-select patrol_mission --event-handlers console_cohesion+
+          colcon test-result --verbose
